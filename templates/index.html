@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Статус игр</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header>
+        <h1>Игровой статус</h1>
+        <div class="theme-switch">
+            <label class="switch">
+                <input type="checkbox" id="theme-toggle">
+                <span class="slider"></span>
+            </label>
+            <span>Черный мод</span>
+        </div>
+    </header>
+
+    <main>
+        <div class="pc-status">
+            <div class="card pc1">
+                <h2>PC1</h2>
+                <p>Статус: <span class="status-text">Ожидание</span></p>
+                <p>Последний раз найдена игра: <span id="pc1-time">--:--</span></p>
+            </div>
+
+            <div class="card pc2">
+                <h2>PC2</h2>
+                <p>Статус: <span class="status-text">Ожидание</span></p>
+                <p>Последний раз найдена игра: <span id="pc2-time">--:--</span></p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>https://t.me/tek1tilted</p>
+    </footer>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
