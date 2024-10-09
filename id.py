@@ -21,6 +21,14 @@ def reset_pc_states():
         pc_timestamps["pc2"] = None
         print("Состояние ПК сброшено")
 
+# Функция для таймера сброса состояния
+def start_reset_timer(pc):
+    global timeout_timers
+    if timeout_timers[pc] is not None:
+        timeout_timers[pc].cancel()
+    timeout_timers[pc] = threading.Timer(6.0, reset_pc_states)
+    timeout_timers[pc].start()
+
 # Маршрут для главной страницы
 @app.route("/", methods=["GET"])
 def index():
@@ -40,12 +48,20 @@ def ready():
         if data["pc"] == "pc1":
             pc_states["pc1"] = True
             pc_timestamps["pc1"] = time.time()
+            start_reset_timer("pc1")
         elif data["pc"] == "pc2":
             pc_states["pc2"] = True
             pc_timestamps["pc2"] = time.time()
+            start_reset_timer("pc2")
 
-        return jsonify({"status": "updated"})
-    
+        # Проверяем, пришли ли запросы от обоих ПК в течение 6 секунд
+        if pc_states["pc1"] and pc_states["pc2"]:
+            if abs(pc_timestamps["pc1"] - pc_timestamps["pc2"]) <= 6:
+                reset_pc_states()
+                return jsonify({"status": "accepted"})
+
+        return jsonify({"status": "waiting for other PC"})
+
 @app.route("/status")
 def status():
     return jsonify({
@@ -68,6 +84,7 @@ def accept_game():
         if data["pc"] in pc_states:
             pc_states[data["pc"]] = True
             pc_timestamps[data["pc"]] = time.time()
+            start_reset_timer(data["pc"])
             return jsonify({"status": "game_accepted"})
         else:
             return jsonify({"status": "error", "message": "Неверный ПК"}), 400
