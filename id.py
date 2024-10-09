@@ -68,7 +68,7 @@ def accept_game():
         if data["pc"] in pc_states:
             pc_states[data["pc"]] = True
             pc_timestamps[data["pc"]] = time.time()
-            return jsonify({"status": "accepted"})
+            return jsonify({"status": "game_accepted"})
         else:
             return jsonify({"status": "error", "message": "Неверный ПК"}), 400
 
