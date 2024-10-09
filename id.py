@@ -59,6 +59,19 @@ def status():
         }
     })
 
+# Маршрут для принятия игры от ПК
+@app.route("/accept_game", methods=["POST"])
+def accept_game():
+    data = request.json
+
+    with global_lock:
+        if data["pc"] in pc_states:
+            pc_states[data["pc"]] = True
+            pc_timestamps[data["pc"]] = time.time()
+            return jsonify({"status": "accepted"})
+        else:
+            return jsonify({"status": "error", "message": "Неверный ПК"}), 400
+
 # Маршрут для сброса состояния
 @app.route("/reset", methods=["POST"])
 def reset():
