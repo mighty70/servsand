@@ -54,13 +54,17 @@ def ready():
             pc_timestamps["pc2"] = time.time()
             start_reset_timer("pc2")
 
-        # Проверяем, пришли ли запросы от обоих ПК в течение 6 секунд
+        # Проверяем состояние обоих ПК
         if pc_states["pc1"] and pc_states["pc2"]:
             if abs(pc_timestamps["pc1"] - pc_timestamps["pc2"]) <= 6:
                 reset_pc_states()
-                return jsonify({"status": "accepted"})
+                return jsonify({"status": "accepted"})  # Оба ПК готовы
 
-        return jsonify({"status": "waiting for other PC"})
+        # Если один из ПК готов, но второй еще нет
+        if pc_states["pc1"] or pc_states["pc2"]:
+            return jsonify({"status": "waiting for other PC"})
+
+        return jsonify({"status": "no PC ready"})
 
 @app.route("/status")
 def status():
