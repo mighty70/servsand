@@ -29,14 +29,6 @@ def start_reset_timer(pc):
     timeout_timers[pc] = threading.Timer(6.0, reset_pc_states)
     timeout_timers[pc].start()
 
-# Маршрут для главной страницы
-@app.route("/", methods=["GET"])
-def index():
-    with global_lock:
-        pc1_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(pc_timestamps["pc1"])) if pc_timestamps["pc1"] else "N/A"
-        pc2_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(pc_timestamps["pc2"])) if pc_timestamps["pc2"] else "N/A"
-        return render_template("index.html", pc1_time=pc1_time, pc2_time=pc2_time, pc_states=pc_states)
-
 # Маршрут для получения состояния готовности от ПК
 @app.route("/ready", methods=["POST"])
 def ready():
@@ -57,27 +49,17 @@ def ready():
         # Проверяем состояние обоих ПК
         if pc_states["pc1"] and pc_states["pc2"]:
             if abs(pc_timestamps["pc1"] - pc_timestamps["pc2"]) <= 6:
-                reset_pc_states()
-                return jsonify({"status": "game_accepted"})  # Оба ПК готовы
+                # Сначала выполняем действие, затем сбрасываем состояние
+                response = {"status": "game_accepted"}
+                print("Оба ПК готовы. Выполняем действие game_accepted.")
+                reset_pc_states()  # Выполняем сброс состояния после отправки ответа
+                return jsonify(response)
 
         # Если один из ПК готов, но второй еще нет
         if pc_states["pc1"] or pc_states["pc2"]:
             return jsonify({"status": "game_found"})
 
         return jsonify({"status": "no PC ready"})
-
-@app.route("/status")
-def status():
-    return jsonify({
-        "pc1": {
-            "status": "Ready" if pc_states["pc1"] else "Waiting",
-            "time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(pc_timestamps["pc1"])) if pc_timestamps["pc1"] else None
-        },
-        "pc2": {
-            "status": "Ready" if pc_states["pc2"] else "Waiting",
-            "time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(pc_timestamps["pc2"])) if pc_timestamps["pc2"] else None
-        }
-    })
 
 # Маршрут для принятия игры от ПК
 @app.route("/accept_game", methods=["POST"])
@@ -95,9 +77,11 @@ def accept_game():
             # Проверяем, готовы ли оба ПК
             if pc_states["pc1"] and pc_states["pc2"]:
                 if abs(pc_timestamps["pc1"] - pc_timestamps["pc2"]) <= 6:
-                    # Только здесь сбрасываем состояние, когда оба ПК готовы
-                    reset_pc_states()
-                    return jsonify({"status": "game_accepted"})
+                    # Сначала выполняем действие, затем сбрасываем состояние
+                    response = {"status": "game_accepted"}
+                    print("Оба ПК готовы. Выполняем действие game_accepted.")
+                    reset_pc_states()  # Выполняем сброс состояния после отправки ответа
+                    return jsonify(response)
 
             # Если второй ПК еще не готов
             return jsonify({"status": "game_found"})
