@@ -58,11 +58,11 @@ def ready():
         if pc_states["pc1"] and pc_states["pc2"]:
             if abs(pc_timestamps["pc1"] - pc_timestamps["pc2"]) <= 6:
                 reset_pc_states()
-                return jsonify({"status": "accepted"})  # Оба ПК готовы
+                return jsonify({"status": "game_accepted"})  # Оба ПК готовы
 
         # Если один из ПК готов, но второй еще нет
         if pc_states["pc1"] or pc_states["pc2"]:
-            return jsonify({"status": "waiting for other PC"})
+            return jsonify({"status": "game_found"})
 
         return jsonify({"status": "no PC ready"})
 
@@ -100,7 +100,7 @@ def accept_game():
                     return jsonify({"status": "game_accepted"})
 
             # Если второй ПК еще не готов
-            return jsonify({"status": "waiting for other PC"})
+            return jsonify({"status": "game_found"})
         else:
             return jsonify({"status": "error", "message": "Неверный ПК"}), 400
 
