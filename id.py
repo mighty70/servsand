@@ -82,14 +82,25 @@ def status():
 # Маршрут для принятия игры от ПК
 @app.route("/accept_game", methods=["POST"])
 def accept_game():
+    global pc_states, pc_timestamps
     data = request.json
 
     with global_lock:
+        # Обновляем состояние ПК, который отправил запрос
         if data["pc"] in pc_states:
             pc_states[data["pc"]] = True
             pc_timestamps[data["pc"]] = time.time()
             start_reset_timer(data["pc"])
-            return jsonify({"status": "game_accepted"})
+
+            # Проверяем, готовы ли оба ПК
+            if pc_states["pc1"] and pc_states["pc2"]:
+                if abs(pc_timestamps["pc1"] - pc_timestamps["pc2"]) <= 6:
+                    # Только здесь сбрасываем состояние, когда оба ПК готовы
+                    reset_pc_states()
+                    return jsonify({"status": "game_accepted"})
+
+            # Если второй ПК еще не готов
+            return jsonify({"status": "waiting for other PC"})
         else:
             return jsonify({"status": "error", "message": "Неверный ПК"}), 400
 
