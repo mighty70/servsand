@@ -11,15 +11,28 @@ timeout_timers = {"pc1": None, "pc2": None}
 
 global_lock = threading.Lock()
 
-# Функция сброса состояния ПК
-def reset_pc_states():
-    global pc_states, pc_timestamps
+# Функция запуска таймера для сброса состояния
+def start_reset_timer(pc):
+    global timeout_timers
+
+    # Если для данного ПК уже запущен таймер, отменяем его
+    if timeout_timers[pc] is not None:
+        timeout_timers[pc].cancel()
+
+    # Запускаем новый таймер на 15 секунд для сброса состояния
+    timer = threading.Timer(15.0, reset_pc_state, [pc])
+    timeout_timers[pc] = timer
+    timer.start()
+
+# Функция сброса состояния конкретного ПК
+def reset_pc_state(pc):
+    global pc_states, pc_timestamps, timeout_timers
+
     with global_lock:
-        pc_states["pc1"] = False
-        pc_states["pc2"] = False
-        pc_timestamps["pc1"] = None
-        pc_timestamps["pc2"] = None
-        print("Состояние ПК сброшено")
+        pc_states[pc] = False
+        pc_timestamps[pc] = None
+        timeout_timers[pc] = None
+        print(f"Состояние ПК {pc} сброшено")
 
 # Маршрут для главной страницы
 @app.route("/", methods=["GET"])
