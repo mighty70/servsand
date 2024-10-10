@@ -29,22 +29,28 @@ def index():
         pc2_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(pc_timestamps["pc2"])) if pc_timestamps["pc2"] else "N/A"
         return render_template("index.html", pc1_time=pc1_time, pc2_time=pc2_time, pc_states=pc_states)
 
-# Маршрут для получения состояния готовности от ПК
+
 @app.route("/ready", methods=["POST"])
 def ready():
     global pc_states, pc_timestamps
     data = request.json
 
     with global_lock:
-        # Обновляем состояние и время получения сигнала от ПК
+        # Обновляем состояние и время получения сигнала
         if data["pc"] == "pc1":
             pc_states["pc1"] = True
             pc_timestamps["pc1"] = time.time()
+            start_reset_timer("pc1")
         elif data["pc"] == "pc2":
             pc_states["pc2"] = True
             pc_timestamps["pc2"] = time.time()
+            start_reset_timer("pc2")
 
-        return jsonify({"status": "updated"})
+        # Проверяем, оба ли ПК готовы
+        if pc_states["pc1"] and pc_states["pc2"]:
+            return jsonify({"status": "both_ready"})
+        else:
+            return jsonify({"status": "waiting"})
 
 @app.route("/status")
 def status():
@@ -59,17 +65,27 @@ def status():
         }
     })
 
-# Маршрут для принятия игры от ПК
 @app.route("/accept_game", methods=["POST"])
 def accept_game():
+    global pc_states
     data = request.json
+
     with global_lock:
-        if data["pc"] in pc_states:
-            pc_states[data["pc"]] = True
-            pc_timestamps[data["pc"]] = time.time()
-            return jsonify({"status": "game_accepted"})
+        # Обновляем состояние ПК для принятия игры
+        if data["pc"] == "pc1":
+            pc_states["pc1"] = True
+            start_reset_timer("pc1")
+        elif data["pc"] == "pc2":
+            pc_states["pc2"] = True
+            start_reset_timer("pc2")
+
+        # Проверяем, оба ли ПК готовы принять игру
+        if pc_states["pc1"] and pc_states["pc2"]:
+            return jsonify({"status": "game_accepted", "message": "Оба ПК приняли игру."})
         else:
-            return jsonify({"status": "error", "message": "Неверный ПК"}), 400
+            return jsonify({"status": "waiting_for_accept", "message": "Ожидание принятия игры вторым ПК."})
+
+
 # Маршрут для сброса состояния
 @app.route("/reset", methods=["POST"])
 def reset():
