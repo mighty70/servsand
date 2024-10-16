@@ -20,7 +20,7 @@ def start_reset_timer(pc):
         timeout_timers[pc].cancel()
 
     # Запускаем новый таймер на 15 секунд для сброса состояния
-    timer = threading.Timer(15.0, reset_pc_state, [pc])
+    timer = threading.Timer(6.0, reset_pc_state, [pc])
     timeout_timers[pc] = timer
     timer.start()
 
